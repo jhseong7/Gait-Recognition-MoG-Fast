@@ -41,9 +41,15 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\opencv\build\include;$(INTELOCLSDKROOT)include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>C:\opencv\build\x86\vc12\lib;C:\opencv\build\x86\vc12\staticlib;C:\opencv\build\x86\vc12\bin;$(INTELOCLSDKROOT)lib\x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);</LibraryPath>
+    <SourcePath>C:\opencv\sources;$(VC_SourcePath);</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\opencv\build\include;$(INTELOCLSDKROOT)include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>C:\opencv\build\x86\vc12\lib;C:\opencv\build\x86\vc12\staticlib;C:\opencv\build\x86\vc12\bin;$(INTELOCLSDKROOT)lib\x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);</LibraryPath>
+    <SourcePath>C:\opencv\sources;$(VC_SourcePath);</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -53,10 +59,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(INTELOCLSDKROOT)include;C:\opencv\build\include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(INTELOCLSDKROOT)lib\x86;C:\opencv\build\x86\vc12\lib;C:\opencv\build\x86\vc12\staticlib;C:\opencv\build\x86\vc12\bin;$(INTELOCLSDKROOT)lib\x86;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>winmm.lib;opencv_world300d.lib;opencv_ts300d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -69,15 +78,44 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(INTELOCLSDKROOT)include;C:\opencv\build\include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(INTELOCLSDKROOT)lib\x86;C:\opencv\build\x86\vc12\lib;C:\opencv\build\x86\vc12\staticlib;C:\opencv\build\x86\vc12\bin;$(INTELOCLSDKROOT)lib\x86;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_world300.lib;opencv_ts300.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Contour_extraction.cpp" />
+    <ClCompile Include="Cutting_silhouette_area.cpp" />
+    <ClCompile Include="CV_MOG.cpp" />
+    <ClCompile Include="Find_refer_point.cpp" />
+    <ClCompile Include="Gait_period_cal.cpp" />
+    <ClCompile Include="HSC.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Resampling.cpp" />
+    <ClCompile Include="Search_center.cpp" />
+    <ClCompile Include="Star_Skeleton.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="common.h" />
+    <ClInclude Include="Contour_extraction.h" />
+    <ClInclude Include="Cutting_silhouette_area.h" />
+    <ClInclude Include="Find_refer_point.hpp" />
+    <ClInclude Include="Gait_period_cal.hpp" />
+    <ClInclude Include="HSC.hpp" />
+    <ClInclude Include="Image_open.h" />
+    <ClInclude Include="opencv_inc.h" />
+    <ClInclude Include="Resampling.hpp" />
+    <ClInclude Include="Search_center.h" />
+    <ClInclude Include="Star_Skeleton.h" />
+    <ClInclude Include="temp.hpp" />
+    <ClInclude Include="Weight_cal.hpp" />
+    <ClInclude Include="YJ_Contour.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
