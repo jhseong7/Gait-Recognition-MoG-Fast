@@ -57,6 +57,9 @@
     <ClCompile Include="Star_Skeleton.cpp">
       <Filter>Source Files\Feature Extraction</Filter>
     </ClCompile>
+    <ClCompile Include="CV_Masking.cpp">
+      <Filter>Source Files\Background Subtraction</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">

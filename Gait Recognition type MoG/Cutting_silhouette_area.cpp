@@ -22,6 +22,7 @@ Mat Cutting_silhouette_area(Mat* input_image,int* height,int* width)
         해당 픽셀의 좌표가 기존의 좌우경계 값보다 작거나 큰 경우
         해당 픽셀의 좌표로 대체 한다. **/
     //////////////////////////////////////////
+
 	for(i=0;i<image.rows;i++)
 	{
 		for(j=0;j<image.cols;j++)

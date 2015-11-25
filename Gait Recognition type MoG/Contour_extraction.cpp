@@ -1,5 +1,10 @@
+#include "common.h"
+
 #include "opencv_inc.h"
 #include "Contour_extraction.h"
+
+//포인트 지점
+Point maxP, minP;
 
 Mat Erosion(int erosion_element,int erosion_size, Mat input_image, void*);
 Mat Dilation(int dilation_element,int dilation_size, Mat input_image,void*);
@@ -140,7 +145,6 @@ void ContourBasedFilter(Mat* output_image, Mat* input_image)
 
 	drawContours(*output_image, contours, Max_Length_Index, color, 1, 8, hierarchy, 2, Point());
 
-	Point maxP, minP;
 
 	int row = input_image->rows;
 	int col = input_image->cols;
@@ -173,6 +177,8 @@ void ContourBasedFilter(Mat* output_image, Mat* input_image)
 		}
 	}
 
+	
+
 	for (int x = minP.x; x < maxP.x; x++)
 	{
 		for (int y = minP.y ; y < maxP.y; y++)
@@ -181,9 +187,21 @@ void ContourBasedFilter(Mat* output_image, Mat* input_image)
 		}
 	}
 	
+	if ((minP.x + maxP.x) / 2 >Previous_Point.x)
+	{
+		Direction_Tally[1]++;
+		Direction_Tally[0] = 0;
+	}
 
+	else if ((minP.x + maxP.x) / 2 < Previous_Point.x)
+	{
+		Direction_Tally[0]++;
+		Direction_Tally[1] = 0;
+	}
 
-
+		Previous_Point.x = (minP.x + maxP.x) / 2;
+		Previous_Point.y = (minP.y + maxP.y) / 2;
+	
 }
 
 /*

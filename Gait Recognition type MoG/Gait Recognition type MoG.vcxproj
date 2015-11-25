@@ -92,6 +92,7 @@
   <ItemGroup>
     <ClCompile Include="Contour_extraction.cpp" />
     <ClCompile Include="Cutting_silhouette_area.cpp" />
+    <ClCompile Include="CV_Masking.cpp" />
     <ClCompile Include="CV_MOG.cpp" />
     <ClCompile Include="Find_refer_point.cpp" />
     <ClCompile Include="Gait_period_cal.cpp" />
