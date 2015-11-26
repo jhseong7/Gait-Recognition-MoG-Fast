@@ -3,8 +3,12 @@
 #include "opencv_inc.h"
 #include "Contour_extraction.h"
 
+#define DELTA_MAX 20
+
 //포인트 지점
 Point maxP, minP;
+Point maxSize;
+
 
 Mat Erosion(int erosion_element,int erosion_size, Mat input_image, void*);
 Mat Dilation(int dilation_element,int dilation_size, Mat input_image,void*);
@@ -177,6 +181,7 @@ void ContourBasedFilter(Mat* output_image, Mat* input_image)
 		}
 	}
 
+	Point Current_Point = (minP + maxP) / 2;
 	
 
 	for (int x = minP.x; x < maxP.x; x++)
@@ -187,20 +192,34 @@ void ContourBasedFilter(Mat* output_image, Mat* input_image)
 		}
 	}
 	
-	if ((minP.x + maxP.x) / 2 >Previous_Point.x)
+	if (Current_Point.x >Previous_Point.x)
 	{
 		Direction_Tally[1]++;
 		Direction_Tally[0] = 0;
 	}
 
-	else if ((minP.x + maxP.x) / 2 < Previous_Point.x)
+	else if (Current_Point.x < Previous_Point.x)
 	{
 		Direction_Tally[0]++;
 		Direction_Tally[1] = 0;
 	}
 
-		Previous_Point.x = (minP.x + maxP.x) / 2;
-		Previous_Point.y = (minP.y + maxP.y) / 2;
+	if (abs(Current_Point.x - Previous_Point.x) >DELTA_MAX)
+		maxSize.x = 0;
+
+	if (abs(Current_Point.y - Previous_Point.y) >DELTA_MAX)
+		maxSize.y = 0;
+
+	Previous_Point = Current_Point;
+
+		//박스의  최대 크기 기록
+	Point BoxSize = maxP - minP;
+
+	if (BoxSize.x > maxSize.x)
+		maxSize.x = BoxSize.x;
+
+	if (BoxSize.y > maxSize.y)
+		maxSize.y = BoxSize.y;
 	
 }
 

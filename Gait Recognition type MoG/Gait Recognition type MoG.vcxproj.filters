@@ -92,9 +92,6 @@
     <ClInclude Include="Search_center.h">
       <Filter>Header Files\Feature Extraction</Filter>
     </ClInclude>
-    <ClInclude Include="Star_Skeleton.h">
-      <Filter>Header Files\Feature Extraction</Filter>
-    </ClInclude>
     <ClInclude Include="temp.hpp">
       <Filter>Header Files\Feature Extraction</Filter>
     </ClInclude>

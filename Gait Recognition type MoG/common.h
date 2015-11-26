@@ -1,3 +1,5 @@
+#include <Eigen/Dense>
+
 
 #include <opencv2\opencv.hpp>  
 #include <opencv2/core/core.hpp>  
@@ -41,6 +43,7 @@ extern int frame_no;
 extern int Direction_Tally[2];
 
 extern cv::Point maxP, minP;
+extern cv::Point maxSize;
 
 bool CheckEmpty(Mat* Input_Image);
 void ShowSteadyContour(Mat* Output_Image, Mat* BW_Contour, Mat* Resize_Points);

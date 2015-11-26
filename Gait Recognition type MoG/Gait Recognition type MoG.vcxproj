@@ -59,7 +59,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(INTELOCLSDKROOT)include;C:\opencv\build\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Eigen;$(INTELOCLSDKROOT)include;C:\opencv\build\include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -78,7 +78,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(INTELOCLSDKROOT)include;C:\opencv\build\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Eigen;$(INTELOCLSDKROOT)include;C:\opencv\build\include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -113,7 +113,6 @@
     <ClInclude Include="opencv_inc.h" />
     <ClInclude Include="Resampling.hpp" />
     <ClInclude Include="Search_center.h" />
-    <ClInclude Include="Star_Skeleton.h" />
     <ClInclude Include="temp.hpp" />
     <ClInclude Include="Weight_cal.hpp" />
     <ClInclude Include="YJ_Contour.hpp" />
