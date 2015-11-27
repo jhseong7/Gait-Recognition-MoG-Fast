@@ -101,5 +101,8 @@
     <ClInclude Include="YJ_Contour.hpp">
       <Filter>Header Files\Feature Extraction</Filter>
     </ClInclude>
+    <ClInclude Include="Global Variables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

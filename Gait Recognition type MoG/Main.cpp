@@ -1,6 +1,6 @@
 // StereoD3D.cpp : Defines the entry point for the application.
 //
-
+#include "Global Variables.h"
 
 #include "common.h"
 #include <fstream>
@@ -101,7 +101,7 @@ string Train_data_path;
 string Video_File_Path;
 bool Webcam_mode = WEBCAM_MODE;
 int Webcam_number = WEBCAM_NUMBER;
-
+bool Loop_Mode = false;
 //
 
 using namespace std;
@@ -113,6 +113,7 @@ enum Config_type{
 	VIDEO_PATH,
 	WEBCAM,
 	WEBCAM_NO,
+	LOOP_MODE,
 }; //config 파일용
 
 string FindConfigurationString(string currentline, int* Type)
@@ -143,11 +144,14 @@ string FindConfigurationString(string currentline, int* Type)
 
 		if (currentline.find("webcam_number=") != string::npos)
 			*Type = WEBCAM_NO;
+
+		if (currentline.find("loop_mode=") != string::npos)
+			*Type = LOOP_MODE;
 	}
 
 	//Type이 안정해지는 경우는 설정이 아니므로 에러반환
 	if (*Type == 0)
-		return " ";
+		return "";
 
 
 	for (i = 0; i < currentline.size(); i++)
@@ -202,6 +206,12 @@ int ConfigurationFileRead() //옵션 파일을 읽어, 해당하는 변수를 모두 설정하는 함
 			break;
 		case WEBCAM_NO:
 			Webcam_number = stoi(data.c_str());
+			break;
+		case LOOP_MODE:
+			if (data.find("true") != string::npos)
+				Loop_Mode = true;
+			else
+				Loop_Mode = false;
 			break;
 		default:
 			continue;
@@ -280,11 +290,6 @@ void InitOpenCVModules() //OPENCV 데이터들의 초기화
 }
 
 
-void InitWindows()
-{
-	InitContourWindow();
-}
-
 int main(int argc, char *argv[])
 {
 	
@@ -358,9 +363,23 @@ int main(int argc, char *argv[])
 		{
 			if (!capture.read(Current_Frame))
 			{
-				cerr << "Unable to read next frame." << endl;
-				cerr << "Exiting..." << endl;
-				exit(EXIT_FAILURE);
+				if (Loop_Mode)
+				{
+#if USE_CONFIG_FILE
+					capture = VideoCapture(Video_File_Path);
+#else
+					ostringstream FilePathVideo;
+					FilePathVideo << READ_VIDEO_FOLDER << videoFilename;
+					capture = VideoCapture(FilePathVideo.str()); //파일에서 읽을 것을 할당해준다.
+#endif
+					continue;
+				}
+				else
+				{
+					cerr << "End of File" << endl;
+					cerr << "Exiting..." << endl;
+					exit(EXIT_FAILURE);
+				}
 			}
 
 		}

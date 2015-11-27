@@ -1,6 +1,8 @@
+#ifndef COMMON_H__
+#define COMMON_H__
+
+
 #include <Eigen/Dense>
-
-
 #include <opencv2\opencv.hpp>  
 #include <opencv2/core/core.hpp>  
 #include <opencv2/highgui/highgui.hpp>  
@@ -22,29 +24,6 @@ using namespace std;
 #include "Resampling.hpp"
 #include "Find_refer_point.hpp"
 
-//GraphCut
-extern cv::Mat Silhouette_Final;
-extern cv::Mat Silhouette_Track;
-
-
-extern cv::Mat Current_Frame;
-extern cv::Mat BackgroundMOG;
-extern cv::Mat HSV_Image, HSV_Background;
-extern int Rows, Cols;
-
-extern cv::UMat CL_Current_Frame;
-extern cv::UMat CL_Background_Frame;
-
-extern int Walk_Direction;
-extern cv::Point Previous_Point;
-
-extern int frame_no;
-
-extern int Direction_Tally[2];
-
-extern cv::Point maxP, minP;
-extern cv::Point maxSize;
-
 bool CheckEmpty(Mat* Input_Image);
 void ShowSteadyContour(Mat* Output_Image, Mat* BW_Contour, Mat* Resize_Points);
 
@@ -60,3 +39,6 @@ void InitContourWindow();
 
 //Masking
 void ImageMask(Mat* Output_Image, Mat* Input_Image, Mat* Mask_Image);
+
+
+#endif

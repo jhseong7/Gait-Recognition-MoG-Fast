@@ -108,6 +108,7 @@
     <ClInclude Include="Cutting_silhouette_area.h" />
     <ClInclude Include="Find_refer_point.hpp" />
     <ClInclude Include="Gait_period_cal.hpp" />
+    <ClInclude Include="Global Variables.h" />
     <ClInclude Include="HSC.hpp" />
     <ClInclude Include="Image_open.h" />
     <ClInclude Include="opencv_inc.h" />

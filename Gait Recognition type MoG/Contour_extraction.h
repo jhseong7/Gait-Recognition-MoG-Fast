@@ -1,6 +1,7 @@
 #ifndef CONTOUR_H
 #define CONTOUR_H
 
+#include "Global Variables.h"
 #include "Search_center.h"
 
 
