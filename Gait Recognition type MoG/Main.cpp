@@ -20,11 +20,9 @@
 #define WEBCAM_MODE false
 #define WEBCAM_NUMBER 1
 
-#define FRAMESKIP_NO 0
+#define FRAMESKIP_ENABLE false
 
 #define FILESAVE_MODE_EN false
-
-#define FAST_MODE true
 
 #define MORPH_STRUCT_SIZE_X 1
 #define MORPH_STRUCT_SIZE_Y 2
@@ -32,7 +30,7 @@
 #define READ_VIDEO_FOLDER "Input/"
 #define READ_VIDEO_NAME "Jgag.avi"
 
-#define TARGET_FPS 30.0
+#define TARGET_FPS 50.0
 
 #define LEFT_WALK -1
 #define SAME_WALK 0
@@ -40,17 +38,24 @@
 
 #define WALK_DIRECTION_THRESHOLD 5
 
+#define MAX_BOX_X 40
+#define MAX_BOX_Y 80
 
+#define toggle(a) !a
+
+//컴파일러 설정
 #define OPENCL_SUPPORT 1
 #define MASK_MODE 0
 #define WINDOWS_MODE 1
 #define DEBUG_MODE 0
 #define DEMO_MODE 1
 
-#define MAX_BOX_X 40
-#define MAX_BOX_Y 80
+#define USE_CONFIG_FILE 1
 
-#define toggle(a) !a
+//에러코드
+#define END_OK 0
+#define END_ERROR 1
+
 
 //-----------------------------------------------------------------------------
 // Global variables
@@ -91,12 +96,121 @@ double frame_difference = 0;
 
 int Direction_Tally[2] = { 0 };
 
+//설정 변수
+string Train_data_path;
+string Video_File_Path;
+bool Webcam_mode = WEBCAM_MODE;
+int Webcam_number = WEBCAM_NUMBER;
+
+//
 
 using namespace std;
 using namespace cv;
 
-void hahaha(int a, void* b)
+
+enum Config_type{
+	TRAIN_PATH = 1,
+	VIDEO_PATH,
+	WEBCAM,
+	WEBCAM_NO,
+}; //config 파일용
+
+string FindConfigurationString(string currentline, int* Type)
 {
+	
+	//변수 설명
+	//configuration_data : 파일에서 반환되는 configuration 파일의 설정값을 저장하는 변수
+	//i: index 변수, '='의 위치를 찾아 configuration_data에 넣을 string을 짜를 위치를 참조할때 사용
+	//data_index : =의 위치를 저장하는 용도
+	//type : 어느 설정 값인지 알려주는 용도.
+
+	string configuration_data;
+	int i, data_index;
+
+	data_index = 0;
+	*Type = 0;
+
+	//어느 구문인지를 판별
+	{
+		if (currentline.find("training_data_path=") != string::npos)
+			*Type = TRAIN_PATH;
+
+		if (currentline.find("input_video_path=") != string::npos)
+			*Type = VIDEO_PATH;
+
+		if (currentline.find("webcam_mode=") != string::npos)
+			*Type = WEBCAM;
+
+		if (currentline.find("webcam_number=") != string::npos)
+			*Type = WEBCAM_NO;
+	}
+
+	//Type이 안정해지는 경우는 설정이 아니므로 에러반환
+	if (*Type == 0)
+		return " ";
+
+
+	for (i = 0; i < currentline.size(); i++)
+		if (currentline.c_str()[i] == '=')
+		{
+			data_index = i;
+			break;
+		}
+	
+	//data 부분만을 반환
+	configuration_data = currentline.substr(data_index + 1, currentline.size() - 1);
+
+	return configuration_data;
+}
+
+int ConfigurationFileRead() //옵션 파일을 읽어, 해당하는 변수를 모두 설정하는 함수. 실행시에 호출
+{
+	ifstream Input_Stream("Config.txt");
+
+	if (!Input_Stream.is_open())
+	{ 
+		cout << "Config.txt not found" << endl;
+		return END_ERROR;
+	}
+
+	string current_line;
+
+	string data;
+	int Type;
+
+	while (!Input_Stream.eof()) //파일 끝까지 읽는다.
+	{
+		getline(Input_Stream, current_line); //줄을 읽는다.
+
+		data = FindConfigurationString(current_line, &Type);
+
+		switch (Type) 
+		{
+		case 0:
+			continue; //에러이므로
+		case TRAIN_PATH:
+			Train_data_path = data;
+			break;
+		case VIDEO_PATH:
+			Video_File_Path = data;
+			break;
+		case WEBCAM:
+			if (data.find("true") != string::npos)
+				Webcam_mode = true;
+			else
+				Webcam_mode = false;
+			break;
+		case WEBCAM_NO:
+			Webcam_number = stoi(data.c_str());
+			break;
+		default:
+			continue;
+		}
+
+
+	}
+
+	return END_OK;
 
 }
 
@@ -111,9 +225,9 @@ void InitOpenCVModules() //OPENCV 데이터들의 초기화
 	/*-----------------------*/
 	
 
-	if (WEBCAM_MODE)
+	if (Webcam_mode)
 	{
-		camera.open(WEBCAM_NUMBER);
+		camera.open(Webcam_number);
 
 		if (!camera.isOpened())  //소스 영상 에러체크
 		{
@@ -128,9 +242,13 @@ void InitOpenCVModules() //OPENCV 데이터들의 초기화
 
 	else
 	{
+#if USE_CONFIG_FILE
+		capture = VideoCapture(Video_File_Path);
+#else
 		ostringstream FilePathVideo;
-		FilePathVideo  << READ_VIDEO_FOLDER << videoFilename;
+		FilePathVideo << READ_VIDEO_FOLDER << videoFilename;
 		capture = VideoCapture(FilePathVideo.str()); //파일에서 읽을 것을 할당해준다.
+#endif
 
 		if (!capture.isOpened())  //소스 영상 에러체크
 		{
@@ -175,11 +293,13 @@ int main(int argc, char *argv[])
 	//초기화
 	//--------------------------------------
 
+	//Config File read
+	ConfigurationFileRead(); //최우선적으로 처리
+
+
 	//OPENCV initialize
 	InitOpenCVModules();
 
-	//Windows initialize
-	//InitWindows();
 
 	//Variable Initialize
 	Mat Morph_Element = getStructuringElement(MORPH_RECT, Size(2 * MORPH_STRUCT_SIZE_X + 1, 2 * MORPH_STRUCT_SIZE_Y + 1), Point(MORPH_STRUCT_SIZE_X, MORPH_STRUCT_SIZE_Y));
@@ -206,37 +326,43 @@ int main(int argc, char *argv[])
 
 		QueryPerformanceCounter(&End_counter);
 
+		long long Counter_diff = (End_counter.QuadPart - Start_counter.QuadPart);
+
 		//Framerate 안정화 Start
-		if ((End_counter.QuadPart - Start_counter.QuadPart) < frame_difference) //Framerate 고정기
+		if ( Counter_diff < frame_difference) //Framerate 고정기
 		{
 			continue;
 		}
 
 		else
 		{
-			frame_rate =  (double)Frequency.QuadPart / (double)(End_counter.QuadPart - Start_counter.QuadPart);
+			frame_rate = (double)Frequency.QuadPart / (double)(Counter_diff);
+
+			if (frame_rate < TARGET_FPS && FRAMESKIP_ENABLE)
+			{
+				capture.read(Current_Frame);
+			}
+
 			QueryPerformanceCounter(&Start_counter);
 		}
 		//Framerate 안정화 End
 
 
 
-		if (WEBCAM_MODE) //웹캠 모드인지 아닌지를 판별용 조건문
+		if (Webcam_mode) //웹캠 모드인지 아닌지를 판별용 조건문
 		{
 			camera >> Current_Frame;
 		}
 
 		else
 		{
-			for (int frameskip = 0; frameskip <= FRAMESKIP_NO; frameskip++)
+			if (!capture.read(Current_Frame))
 			{
-				if (!capture.read(Current_Frame))
-				{
-					cerr << "Unable to read next frame." << endl;
-					cerr << "Exiting..." << endl;
-					exit(EXIT_FAILURE);
-				}
+				cerr << "Unable to read next frame." << endl;
+				cerr << "Exiting..." << endl;
+				exit(EXIT_FAILURE);
 			}
+
 		}
 
 		

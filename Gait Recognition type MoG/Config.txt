@@ -1,0 +1,4 @@
+training_data_path=Data/training data.txt
+input_video_path=Input/Jgag.avi
+webcam_mode=false
+webcam_number=2
