@@ -1,0 +1,15 @@
+Identity_number:7 Identity_number_end
+Name:fyc Name_end
+Configure_size:4 Configure_size_end
+Name:ljg Name_end
+Configure_size:4 Configure_size_end
+Name:lqf Name_end
+Configure_size:4 Configure_size_end
+Name:nhz Name_end
+Configure_size:4 Configure_size_end
+Name:wyc Name_end
+Configure_size:4 Configure_size_end
+Name:xch Name_end
+Configure_size:4 Configure_size_end
+Name:zdx Name_end
+Configure_size:4 Configure_size_end
