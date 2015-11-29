@@ -1,11 +1,11 @@
 // StereoD3D.cpp : Defines the entry point for the application.
 //
 #include "Global Variables.h"
+#include "opencv_inc.h"
 
 #include "common.h"
 #include <fstream>
 #include <ctime>
-#include <opencv2\core\ocl.hpp>
 
 #include <io.h>
 #include <cstdlib>
@@ -38,9 +38,10 @@
 #define RIGHT_WALK 1
 
 #define WALK_DIRECTION_THRESHOLD 5
+#define CONTOUR_CONDITION_THRESHOLD 5
 
 #define MIN_DETECT_CONTOUR 400
-#define MAX_DETECT_CONTOUR 1000
+#define MAX_DETECT_CONTOUR 2000
 
 #define toggle(a) !a
 
@@ -108,6 +109,9 @@ bool Loop_Mode = false;
 //인식결과 flag 변수
 bool Recognition_Processing = false;
 bool Recognition_Success = false;
+int Contour_condition = 0;
+
+
 
 
 using namespace std;
@@ -132,7 +136,7 @@ string FindConfigurationString(string currentline, int* Type)
 	//type : 어느 설정 값인지 알려주는 용도.
 
 	string configuration_data;
-	int i, data_index;
+	uint i, data_index;
 
 	data_index = 0;
 	*Type = 0;
@@ -239,7 +243,7 @@ void InitLocalVariables()
 
 	frame_no = 0;
 	 Walk_Direction = 0;
-
+	 Contour_condition = 0;
 }
 
 void InitOpenCVModules() //OPENCV 데이터들의 초기화
@@ -331,6 +335,9 @@ int main(int argc, char *argv[])
 	vector<vector<Point>> VectorPointer;
 	Mat ContourData;
 
+	vector<Data_set> Training_data;
+	Training_data = Read_training_data(Train_data_path);
+
 
 	QueryPerformanceFrequency(&Frequency);
 
@@ -419,11 +426,14 @@ int main(int argc, char *argv[])
 
 		static Mat Longest_Contour;
 		static int Longest_Contour_Length;
-
+		
+		
 		ContourBasedFilter(&Longest_Contour, &Silhouette_Final, &Longest_Contour_Length);
+		/*
 		cv::morphologyEx(Longest_Contour, Longest_Contour, MORPH_CLOSE, Morph_Element);
 		cv::morphologyEx(Longest_Contour, Longest_Contour, MORPH_DILATE, Morph_Element);
-		
+		*/
+
 		vector<Point> contour_point_array;
 
 		//Contour(&Longest_Contour, &contour_point_array);
@@ -485,21 +495,32 @@ int main(int argc, char *argv[])
 		static string Data_Result = "NULL";
 		string Returned_name;
 
-		if (Longest_Contour_Length > MIN_DETECT_CONTOUR && Longest_Contour_Length < MAX_DETECT_CONTOUR) //실루엣이 존재하고, 컨투어 길이가 일정 이상일때
+		if (Longest_Contour_Length > MIN_DETECT_CONTOUR && Longest_Contour_Length < MAX_DETECT_CONTOUR && frame_no > 0) //실루엣이 존재하고, 컨투어 길이가 일정 이상일때
 		{
-			Returned_name = Train_main(Longest_Contour, Train_data_path);
-
-			Recognition_Processing = true;
-
-			if (Returned_name.find("No Data") == string::npos)
+			if (Contour_condition > CONTOUR_CONDITION_THRESHOLD)
 			{
-				Recognition_Success = true;
-				Data_Result = Returned_name;
+				Returned_name = Train_main(Silhouette_Final, &Training_data);
+
+				Recognition_Processing = true;
+
+				if (Returned_name.find("No Data") == string::npos)
+				{
+					Recognition_Success = true;
+					Data_Result = Returned_name;
+				}
+				else
+				{
+					Data_Result = "Not Recognized";
+				}
 			}
-			else
-			{
-				Data_Result = "Not Recognized";
-			}
+
+			if (Contour_condition <= CONTOUR_CONDITION_THRESHOLD)
+				Contour_condition++;
+		}
+
+		else
+		{
+			Contour_condition = 0;
 		}
 
 
@@ -521,11 +542,18 @@ int main(int argc, char *argv[])
 		ostringstream FPS;
 
 		//프레임 레이트 표기
-		FPS << "Frame#: " << frame_no << " FPS: " << frame_rate << " Longest Contour: " << Longest_Contour_Length;
+		FPS << "Frame#: " << frame_no << " FPS: " << frame_rate; 
 		cv::putText(Mask_Output, FPS.str(), Point(30, 30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255, 255, 255), 4, LINE_AA, false);
 		cv::putText(Mask_Output, FPS.str(), Point(30, 30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(0, 0, 0), 2, LINE_AA, false);
 
+#if DEBUG_MODE
+		ostringstream DebugStream;
 
+		DebugStream << "Longest Contour: " << Longest_Contour_Length << " Period: " <<period;
+		cv::putText(Mask_Output, DebugStream.str(), Point(30, 60), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255, 255, 255), 4, LINE_AA, false);
+		cv::putText(Mask_Output, DebugStream.str(), Point(30, 60), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(0, 0, 0), 2, LINE_AA, false);
+
+#endif
 
 
 

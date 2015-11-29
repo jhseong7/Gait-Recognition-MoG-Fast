@@ -41,6 +41,5 @@ void ContourBasedFilter(Mat* output_image, Mat* input_image, int* Longest_Contou
 //Masking
 void ImageMask(Mat* Output_Image, Mat* Input_Image, Mat* Mask_Image);
 
-string Train_main(Mat Input_image, string File_path);
 
 #endif

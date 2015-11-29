@@ -13,7 +13,7 @@ vector<vector<Point> > Resampling(vector<Point>* input_contour, vector<Point>* r
     
     vector<Point> Head_start_contour(size);
     
-    int Seg1_length;            int Seg2_length;           int Seg3_length;
+    int Seg1_length = 0;            int Seg2_length = 0;           int Seg3_length = 0;
     int Seg1_sample_point=15;   int Seg2_sample_point=10;  int Seg3_sample_point=15;
     
     for(i=0;i<size;i++)

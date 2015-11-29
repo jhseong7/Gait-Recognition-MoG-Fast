@@ -11,7 +11,7 @@ Mat Cutting_silhouette_area(Mat* input_image,int* height,int* width);
 
 void Image_number(int* number_of_image, string Identity, int Identity_num);
 
-int Gait_period_cal(int array_number, double* Ratio_array);
+int Gait_period_cal(int array_number, vector<double> Ratio_array);
 
 vector< complex<float> > CSC(vector<vector<Point> > Segment_array);
 

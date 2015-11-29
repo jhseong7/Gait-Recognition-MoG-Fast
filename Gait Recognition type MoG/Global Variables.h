@@ -23,4 +23,6 @@ extern int Direction_Tally[2];
 
 extern cv::Point maxP, minP;
 extern cv::Point maxSize;
+
+extern int period;
 #endif

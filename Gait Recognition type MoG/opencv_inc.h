@@ -36,10 +36,12 @@ struct Data_set
 };
 
 float Gait_dissimilarity(vector<complex<float> > Gait_1, vector<complex<float> > Gait_2);
-vector<Data_set> Read_training_data(string File_path);
+
 string Recognition(vector<Data_set> Training_data, Configure Input_data);
-Configure Final_result(Mat input_image);
+Configure Final_result(Mat input_image,int* period_final);
 
+string Train_main(Mat Input_image, vector<Data_set>* Training_data);
 
+vector<Data_set> Read_training_data(string File_path);
 
 #endif /* OpenCV_essential_h */
