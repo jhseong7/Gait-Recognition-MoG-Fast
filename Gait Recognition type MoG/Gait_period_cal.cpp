@@ -1,5 +1,5 @@
 #include "opencv_inc.h"
-#include "Gait_period_cal.hpp"
+#include "Preprocess_PMS.h"
 
 int Gait_period_cal(int array_number, double* Ratio_array)
 {

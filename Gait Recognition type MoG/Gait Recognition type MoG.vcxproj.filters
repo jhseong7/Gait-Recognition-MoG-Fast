@@ -25,6 +25,9 @@
     <Filter Include="Header Files\Feature Extraction">
       <UniqueIdentifier>{f041afa4-e715-43c0-bac2-72efb2d0c8f5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Recognition">
+      <UniqueIdentifier>{71f3a4a8-1883-402d-bf61-f39f3754698c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CV_MOG.cpp">
@@ -32,9 +35,6 @@
     </ClCompile>
     <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Contour_extraction.cpp">
-      <Filter>Source Files\Feature Extraction</Filter>
     </ClCompile>
     <ClCompile Include="Cutting_silhouette_area.cpp">
       <Filter>Source Files\Feature Extraction</Filter>
@@ -45,64 +45,52 @@
     <ClCompile Include="Gait_period_cal.cpp">
       <Filter>Source Files\Feature Extraction</Filter>
     </ClCompile>
-    <ClCompile Include="HSC.cpp">
-      <Filter>Source Files\Feature Extraction</Filter>
-    </ClCompile>
     <ClCompile Include="Resampling.cpp">
-      <Filter>Source Files\Feature Extraction</Filter>
-    </ClCompile>
-    <ClCompile Include="Search_center.cpp">
-      <Filter>Source Files\Feature Extraction</Filter>
-    </ClCompile>
-    <ClCompile Include="Star_Skeleton.cpp">
       <Filter>Source Files\Feature Extraction</Filter>
     </ClCompile>
     <ClCompile Include="CV_Masking.cpp">
       <Filter>Source Files\Background Subtraction</Filter>
+    </ClCompile>
+    <ClCompile Include="Make_Feature_data.cpp">
+      <Filter>Source Files\Feature Extraction</Filter>
+    </ClCompile>
+    <ClCompile Include="Train_main.cpp">
+      <Filter>Source Files\Feature Extraction</Filter>
+    </ClCompile>
+    <ClCompile Include="Filter.cpp">
+      <Filter>Source Files\Background Subtraction</Filter>
+    </ClCompile>
+    <ClCompile Include="CSC.cpp">
+      <Filter>Source Files\Feature Extraction</Filter>
+    </ClCompile>
+    <ClCompile Include="DCM.cpp">
+      <Filter>Source Files\Feature Extraction</Filter>
+    </ClCompile>
+    <ClCompile Include="PMS.cpp">
+      <Filter>Source Files\Feature Extraction</Filter>
+    </ClCompile>
+    <ClCompile Include="Read_training_data.cpp">
+      <Filter>Source Files\Feature Extraction</Filter>
+    </ClCompile>
+    <ClCompile Include="Recognition.cpp">
+      <Filter>Source Files\Feature Extraction</Filter>
+    </ClCompile>
+    <ClCompile Include="Contour_extraction.cpp">
+      <Filter>Source Files\Feature Extraction</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">
       <Filter>Header Files\Background Subtraction</Filter>
     </ClInclude>
-    <ClInclude Include="Contour_extraction.h">
-      <Filter>Header Files\Feature Extraction</Filter>
-    </ClInclude>
-    <ClInclude Include="Cutting_silhouette_area.h">
-      <Filter>Header Files\Feature Extraction</Filter>
-    </ClInclude>
-    <ClInclude Include="Find_refer_point.hpp">
-      <Filter>Header Files\Feature Extraction</Filter>
-    </ClInclude>
-    <ClInclude Include="Gait_period_cal.hpp">
-      <Filter>Header Files\Feature Extraction</Filter>
-    </ClInclude>
-    <ClInclude Include="HSC.hpp">
-      <Filter>Header Files\Feature Extraction</Filter>
-    </ClInclude>
-    <ClInclude Include="Image_open.h">
-      <Filter>Header Files\Feature Extraction</Filter>
-    </ClInclude>
-    <ClInclude Include="opencv_inc.h">
-      <Filter>Header Files\Feature Extraction</Filter>
-    </ClInclude>
-    <ClInclude Include="Resampling.hpp">
-      <Filter>Header Files\Feature Extraction</Filter>
-    </ClInclude>
-    <ClInclude Include="Search_center.h">
-      <Filter>Header Files\Feature Extraction</Filter>
-    </ClInclude>
-    <ClInclude Include="temp.hpp">
-      <Filter>Header Files\Feature Extraction</Filter>
-    </ClInclude>
-    <ClInclude Include="Weight_cal.hpp">
-      <Filter>Header Files\Feature Extraction</Filter>
-    </ClInclude>
-    <ClInclude Include="YJ_Contour.hpp">
-      <Filter>Header Files\Feature Extraction</Filter>
-    </ClInclude>
     <ClInclude Include="Global Variables.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="opencv_inc.h">
+      <Filter>Header Files\Recognition</Filter>
+    </ClInclude>
+    <ClInclude Include="Preprocess_PMS.h">
+      <Filter>Header Files\Recognition</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-training_data_path=Data/training data.txt
+training_data_path=Train/
 input_video_path=Input/Jgag.avi
 webcam_mode=false
 webcam_number=2

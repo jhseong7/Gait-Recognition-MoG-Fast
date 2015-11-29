@@ -91,32 +91,27 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Contour_extraction.cpp" />
+    <ClCompile Include="CSC.cpp" />
+    <ClCompile Include="DCM.cpp" />
+    <ClCompile Include="Filter.cpp" />
     <ClCompile Include="Cutting_silhouette_area.cpp" />
     <ClCompile Include="CV_Masking.cpp" />
     <ClCompile Include="CV_MOG.cpp" />
     <ClCompile Include="Find_refer_point.cpp" />
     <ClCompile Include="Gait_period_cal.cpp" />
-    <ClCompile Include="HSC.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Make_Feature_data.cpp" />
+    <ClCompile Include="PMS.cpp" />
+    <ClCompile Include="Read_training_data.cpp" />
+    <ClCompile Include="Recognition.cpp" />
     <ClCompile Include="Resampling.cpp" />
-    <ClCompile Include="Search_center.cpp" />
-    <ClCompile Include="Star_Skeleton.cpp" />
+    <ClCompile Include="Train_main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
-    <ClInclude Include="Contour_extraction.h" />
-    <ClInclude Include="Cutting_silhouette_area.h" />
-    <ClInclude Include="Find_refer_point.hpp" />
-    <ClInclude Include="Gait_period_cal.hpp" />
     <ClInclude Include="Global Variables.h" />
-    <ClInclude Include="HSC.hpp" />
-    <ClInclude Include="Image_open.h" />
     <ClInclude Include="opencv_inc.h" />
-    <ClInclude Include="Resampling.hpp" />
-    <ClInclude Include="Search_center.h" />
-    <ClInclude Include="temp.hpp" />
-    <ClInclude Include="Weight_cal.hpp" />
-    <ClInclude Include="YJ_Contour.hpp" />
+    <ClInclude Include="Preprocess_PMS.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

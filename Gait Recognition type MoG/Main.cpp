@@ -12,6 +12,7 @@
 
 #include <cmath>
 
+#include "Preprocess_PMS.h"
 
 //-----------------------------------------------------------------------------
 //Define
@@ -30,7 +31,7 @@
 #define READ_VIDEO_FOLDER "Input/"
 #define READ_VIDEO_NAME "Jgag.avi"
 
-#define TARGET_FPS 50.0
+#define TARGET_FPS 30.0
 
 #define LEFT_WALK -1
 #define SAME_WALK 0
@@ -38,16 +39,16 @@
 
 #define WALK_DIRECTION_THRESHOLD 5
 
-#define MAX_BOX_X 40
-#define MAX_BOX_Y 80
+#define MIN_DETECT_CONTOUR 400
+#define MAX_DETECT_CONTOUR 1000
 
 #define toggle(a) !a
 
 //컴파일러 설정
-#define OPENCL_SUPPORT 1
+#define OPENCL_SUPPORT 0
 #define MASK_MODE 0
 #define WINDOWS_MODE 1
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1
 #define DEMO_MODE 1
 
 #define USE_CONFIG_FILE 1
@@ -103,6 +104,11 @@ bool Webcam_mode = WEBCAM_MODE;
 int Webcam_number = WEBCAM_NUMBER;
 bool Loop_Mode = false;
 //
+
+//인식결과 flag 변수
+bool Recognition_Processing = false;
+bool Recognition_Success = false;
+
 
 using namespace std;
 using namespace cv;
@@ -224,6 +230,17 @@ int ConfigurationFileRead() //옵션 파일을 읽어, 해당하는 변수를 모두 설정하는 함
 
 }
 
+void InitLocalVariables()
+{
+
+	//인식결과 flag 변수
+	 Recognition_Processing = false;
+	 Recognition_Success = false;
+
+	frame_no = 0;
+	 Walk_Direction = 0;
+
+}
 
 void InitOpenCVModules() //OPENCV 데이터들의 초기화
 {
@@ -307,6 +324,8 @@ int main(int argc, char *argv[])
 
 
 	//Variable Initialize
+	InitLocalVariables();
+
 	Mat Morph_Element = getStructuringElement(MORPH_RECT, Size(2 * MORPH_STRUCT_SIZE_X + 1, 2 * MORPH_STRUCT_SIZE_Y + 1), Point(MORPH_STRUCT_SIZE_X, MORPH_STRUCT_SIZE_Y));
 	
 	vector<vector<Point>> VectorPointer;
@@ -325,9 +344,11 @@ int main(int argc, char *argv[])
 	// 프레임 처리 루프 시작점
 	//--------------------------------------------------------------
 
+	frame_no = 0;
+
 	while (1) //Frame Processing Loop Start
 	{
-		frame_no++; //프레임 넘버 기록
+		 //프레임 넘버 기록
 
 		QueryPerformanceCounter(&End_counter);
 
@@ -361,9 +382,9 @@ int main(int argc, char *argv[])
 
 		else
 		{
-			if (!capture.read(Current_Frame))
+			if (!capture.read(Current_Frame)) 
 			{
-				if (Loop_Mode)
+				if (Loop_Mode) //루프 모드에서는 영상이 끝나면 다시 처음으로 돌아간다.
 				{
 #if USE_CONFIG_FILE
 					capture = VideoCapture(Video_File_Path);
@@ -371,7 +392,9 @@ int main(int argc, char *argv[])
 					ostringstream FilePathVideo;
 					FilePathVideo << READ_VIDEO_FOLDER << videoFilename;
 					capture = VideoCapture(FilePathVideo.str()); //파일에서 읽을 것을 할당해준다.
+					
 #endif
+					InitLocalVariables();
 					continue;
 				}
 				else
@@ -395,12 +418,18 @@ int main(int argc, char *argv[])
 			
 
 		static Mat Longest_Contour;
+		static int Longest_Contour_Length;
 
-		ContourBasedFilter(&Longest_Contour, &Silhouette_Final);
+		ContourBasedFilter(&Longest_Contour, &Silhouette_Final, &Longest_Contour_Length);
+		cv::morphologyEx(Longest_Contour, Longest_Contour, MORPH_CLOSE, Morph_Element);
 		cv::morphologyEx(Longest_Contour, Longest_Contour, MORPH_DILATE, Morph_Element);
 		
+		vector<Point> contour_point_array;
+
+		//Contour(&Longest_Contour, &contour_point_array);
 
 
+		/*
 		//---------------------------------------------------------------//
 		//     Preproccesing START (Feature Extraction)                  //
 		//---------------------------------------------------------------//
@@ -451,6 +480,28 @@ int main(int argc, char *argv[])
 		//---------------------------------------------------------------//
 		//     Preproccesing END (Feature Extraction)                    //
 		//---------------------------------------------------------------//
+		*/
+
+		static string Data_Result = "NULL";
+		string Returned_name;
+
+		if (Longest_Contour_Length > MIN_DETECT_CONTOUR && Longest_Contour_Length < MAX_DETECT_CONTOUR) //실루엣이 존재하고, 컨투어 길이가 일정 이상일때
+		{
+			Returned_name = Train_main(Longest_Contour, Train_data_path);
+
+			Recognition_Processing = true;
+
+			if (Returned_name.find("No Data") == string::npos)
+			{
+				Recognition_Success = true;
+				Data_Result = Returned_name;
+			}
+			else
+			{
+				Data_Result = "Not Recognized";
+			}
+		}
+
 
 		if (Direction_Tally[0] > WALK_DIRECTION_THRESHOLD)
 			Walk_Direction = LEFT_WALK;
@@ -470,14 +521,13 @@ int main(int argc, char *argv[])
 		ostringstream FPS;
 
 		//프레임 레이트 표기
-		FPS << "FPS: " << frame_rate;
-		cv::putText(Mask_Output, FPS.str(), Point(30, 30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255, 255, 255), 3, LINE_AA, false);
-		cv::putText(Mask_Output, FPS.str(), Point(30, 30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(40, 40, 40), 2, LINE_AA, false);
+		FPS << "Frame#: " << frame_no << " FPS: " << frame_rate << " Longest Contour: " << Longest_Contour_Length;
+		cv::putText(Mask_Output, FPS.str(), Point(30, 30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255, 255, 255), 4, LINE_AA, false);
+		cv::putText(Mask_Output, FPS.str(), Point(30, 30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(0, 0, 0), 2, LINE_AA, false);
 
 
 
-		//이미지에 추적되는 사람에 rectangle 표시
-		rectangle(Mask_Output, Previous_Point - maxSize / 2, Previous_Point + maxSize / 2, Scalar(128, 128, 128), 2, 8, 0);
+
 
 		//걷는 방향에 빠라서 표기할 String을 입력 후 이미지에 표시
 		if (Walk_Direction == LEFT_WALK)
@@ -488,7 +538,9 @@ int main(int argc, char *argv[])
 			cv::putText(Mask_Output, "Stop", Point(30, Rows - 30), FONT_HERSHEY_PLAIN, 1.5, Scalar(0, 0, 255), 1, LINE_AA, false);
 
 		
-
+		//이미지에 추적되는 사람에 rectangle 표시
+		if (Longest_Contour_Length > MIN_DETECT_CONTOUR && Longest_Contour_Length < MAX_DETECT_CONTOUR)
+			rectangle(Mask_Output, Previous_Point - maxSize / 2, Previous_Point + maxSize / 2, Scalar(128, 128, 128), 2, 8, 0);
 
 
 		//팀명을 표기
@@ -498,14 +550,18 @@ int main(int argc, char *argv[])
 
 
 		//박스에 용주를 표시(인식 기능은 아직 없고 데모 차원)
-#if DEMO_MODE
-		cv::putText(Mask_Output, "Recognized as:", Point(Cols - 170, Rows - 60), FONT_HERSHEY_COMPLEX_SMALL, 0.9, Scalar(255, 255, 0), 1, LINE_AA, false);
-
-		if ((maxP.y - minP.y) > 125)
+		if (Recognition_Processing)
 		{
-			cv::putText(Mask_Output, "Jae Sung Lee", Point(Cols - 170, Rows - 30), FONT_HERSHEY_COMPLEX_SMALL, 0.9, Scalar(255, 0, 255), 1, LINE_AA, false);
-			cv::putText(Mask_Output, "Recognized ", Point(Cols - 120, 60), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(128, 255, 128), 3, LINE_AA, false);
-			cv::putText(Mask_Output, "Recognized ", Point(Cols - 120, 60), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(64, 64, 64), 1, LINE_AA, false);
+			if (Recognition_Success)
+			{
+				cv::putText(Mask_Output, "Recognized ", Point(Cols - 120, 60), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(128, 255, 128), 3, LINE_AA, false);
+				cv::putText(Mask_Output, "Recognized ", Point(Cols - 120, 60), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(64, 64, 64), 1, LINE_AA, false);
+			}
+			else
+			{
+				cv::putText(Mask_Output, "Processing ", Point(Cols - 120, 60), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(128, 255, 128), 3, LINE_AA, false);
+				cv::putText(Mask_Output, "Processing ", Point(Cols - 120, 60), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(64, 64, 64), 1, LINE_AA, false);
+			}
 		}
 
 		else
@@ -513,13 +569,22 @@ int main(int argc, char *argv[])
 			cv::putText(Mask_Output, "Searching.. ", Point(Cols - 120, 60), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(128, 128, 255), 3, LINE_AA, false);
 			cv::putText(Mask_Output, "Searching.. ", Point(Cols - 120, 60), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(64, 64, 64), 1, LINE_AA, false);
 		}
+
+
+		//인식기 반환 결과를 출력
+		cv::putText(Mask_Output, "Recognized as:", Point(Cols - 170, Rows - 60), FONT_HERSHEY_COMPLEX_SMALL, 0.9, Scalar(255, 255, 0), 1, LINE_AA, false);
+		cv::putText(Mask_Output, Data_Result, Point(Cols - 170, Rows - 30), FONT_HERSHEY_COMPLEX_SMALL, 0.9, Scalar(255, 0, 255), 1, LINE_AA, false);
+
+#if DEMO_MODE
+
+		//설명 표기
+		cv::putText(Mask_Output, "Press ESC to quit", Point(Cols / 2 - 80, Rows - 30), FONT_HERSHEY_PLAIN, 1.2, Scalar(255, 255, 255, 0.5), 1, LINE_AA, false);
+
 #endif
 		//Demo End
 
 
 
-		//설명 표기
-		cv::putText(Mask_Output, "Press ESC to quit", Point(Cols / 2 - 80, Rows - 30), FONT_HERSHEY_PLAIN, 1.2, Scalar(255, 255, 255, 0.5), 1, LINE_AA, false);
 		
 
 
@@ -533,10 +598,12 @@ int main(int argc, char *argv[])
 		cv::moveWindow("Input", 0 + Cols, 0);
 
 		//실루엣은 중앙에 위치하도록 가변 위치 적용
-		cv::moveWindow("Contour_image", 0 + (Cols - width)/2, 0 + Rows + 30);
-		cv::moveWindow("Resampling_image", 0 + (3*Cols - width) / 2, 0 + Rows + 30);
+
+		cv::imshow("Filtered", Longest_Contour);
+		cv::moveWindow("Filtered", 0, 0 + Rows + 30);
 
 #endif
+		frame_no++;
 
 		if (waitKey(1) == 27) //ESC키로 종료 
 			break;
