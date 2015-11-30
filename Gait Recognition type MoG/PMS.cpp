@@ -1,7 +1,7 @@
 #include "opencv_inc.h"
 #include "Preprocess_PMS.h"
 
-vector<complex<float> > PMS(vector<vector<complex<float> >> CSC_array,int period_size)
+vector<complex<float> > PMS(vector<vector<complex<float> >> CSC_array)
 {
     int CSC_size = (int)CSC_array.size();
     int array_size = 0;
@@ -15,10 +15,19 @@ vector<complex<float> > PMS(vector<vector<complex<float> >> CSC_array,int period
     complex<float> mat_ij_1;
     complex<float> mat_ij_2;
     complex<float> scalar(0,0);
-    
-    for(i=0;i<period_size;i++)
+	S_Z.resize(40, vector< complex<float>>(40, 0));
+	for (m = 0; m<40; m++)
+	{
+		for (n = 0; n<40; n++)
+		{
+			S_Z[m][n] = 0;
+		}
+	}
+
+    for(i=0;i<period;i++)
     {
         array_size = (int)(CSC_array[i]).size();
+
         for(m=0;m<array_size;m++)
         {
             mat_ij_1 = CSC_array[i][m];
@@ -41,8 +50,6 @@ vector<complex<float> > PMS(vector<vector<complex<float> >> CSC_array,int period
             }
         }
         
-        S_Z.resize(array_size,vector< complex<float>>(40,0));
-        
         for(m=0;m<array_size;m++)
         {
             for(n=0;n<array_size;n++)
@@ -51,7 +58,7 @@ vector<complex<float> > PMS(vector<vector<complex<float> >> CSC_array,int period
             }
         }
         
-        scalar = 0;
+		scalar = 0;
         Product_mat.clear();
     }
     
@@ -63,7 +70,7 @@ vector<complex<float> > PMS(vector<vector<complex<float> >> CSC_array,int period
     {
         for(n=0;n<array_size;n++)
         {
-            temp(n,m) = S_Z[m][n];
+            temp(m,n) = S_Z[m][n];
         }
     }
     
@@ -81,7 +88,7 @@ vector<complex<float> > PMS(vector<vector<complex<float> >> CSC_array,int period
     
     for(i=0;i<array_size;i++)
     {
-        temp_value = norm(eval(i,0));
+        temp_value = norm( (i,0));
         if(temp_value > Max_eigen)
         {
             Max_eigen = temp_value;
@@ -98,8 +105,9 @@ vector<complex<float> > PMS(vector<vector<complex<float> >> CSC_array,int period
     */
      
     for(i=0;i<array_size;i++)
-    {
-        Major_eigen_vector.push_back(Max_eigen*evec(i,Max_eigen_index));
+	{
+		Major_eigen_vector.push_back(evec(i, Max_eigen_index));
+        //Major_eigen_vector.push_back(Max_eigen*evec(i,Max_eigen_index));
         //cout << Major_eigen_vector[i] << endl;
     }
     

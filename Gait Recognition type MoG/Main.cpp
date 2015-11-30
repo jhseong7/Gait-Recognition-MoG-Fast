@@ -49,13 +49,13 @@
 #define FRAMESKIP_ENABLE false
 
 
-#define MORPH_STRUCT_SIZE_X 1
-#define MORPH_STRUCT_SIZE_Y 2
+#define MORPH_STRUCT_SIZE_X 3
+#define MORPH_STRUCT_SIZE_Y 3
 
 #define TARGET_FPS 30.0
 
 #define WALK_DIRECTION_THRESHOLD 5
-#define CONTOUR_CONDITION_THRESHOLD 1
+#define CONTOUR_CONDITION_THRESHOLD 0
 
 #define MIN_DETECT_CONTOUR 300
 #define MAX_DETECT_CONTOUR 2000
@@ -82,8 +82,9 @@
 #define MASK_MODE 0
 #define DEBUG_MODE 1
 #define DEMO_MODE 1
+#define USE_GUI_BUTTON 1
 
-#define INPUT_IS_SILHOUETTE 1
+#define INPUT_IS_SILHOUETTE 0
 
 #define USE_CONFIG_FILE 1
 
@@ -155,6 +156,14 @@ bool Loop_Mode = false;
 bool Recognition_Processing = false;
 bool Recognition_Success = false;
 int Contour_condition = 0;
+
+
+//Button Click Functions
+bool PlayCommand = true;
+bool ResetCommand = false;
+bool ExitCommand = false;
+bool StartRecognition = false;
+
 
 //StringStream
 string SavePath1, SavePath2, SavePath3, SavePath4;
@@ -394,6 +403,9 @@ void InitSaveDirectories()
 	StringBuffer2 << "Longest Contour/";
 	CreateDirectoryA(StringBuffer2.str().c_str(), NULL);
 
+	StringBuffer3 << "Result/";
+	CreateDirectoryA(StringBuffer3.str().c_str(), NULL);
+
 
 	SavePath1 = StringBuffer1.str();
 	SavePath2 = StringBuffer2.str();
@@ -401,6 +413,64 @@ void InitSaveDirectories()
 	SavePath4 = StringBuffer4.str();
 
 }
+
+void MouseCallBackFunc(int event, int x, int y, int flags, void* userdata)
+{
+
+	if (event == EVENT_LBUTTONDOWN)
+	{
+		//Play Button
+		if (y > Rows - 60 && Rows - 30)
+		{
+			if (x > 30 && x < 90)
+			{
+				cout << "Play/Pause" << endl;
+				if (PlayCommand)
+					PlayCommand = false;
+				else
+					PlayCommand = true;
+			}
+
+			else if (x > 100 && x < 160)
+			{
+				cout << "Reset" << endl;
+				ResetCommand = true;
+			}
+
+			else if (x > 170 && x < 230)
+			{
+				cout << "Exit" << endl;
+				ExitCommand = true;
+			}
+			else if (x > 240 && x < 360)
+			{
+				cout << "Recognition" << endl;
+				StartRecognition = true;
+			}
+			
+		}
+
+
+	}
+
+	/*
+	else if (event == EVENT_RBUTTONDOWN)
+	{
+		cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+	}
+	else if (event == EVENT_MBUTTONDOWN)
+	{
+		cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+	}
+	else if (event == EVENT_MOUSEMOVE)
+	{
+		cout << "Mouse move over the window - position (" << x << ", " << y << ")" << endl;
+
+	}
+
+	*/
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -420,6 +490,13 @@ int main(int argc, char *argv[])
 
 	//Variable Initialize
 	InitLocalVariables();
+
+	//
+	namedWindow("Masked Final", CV_WINDOW_AUTOSIZE);
+	setMouseCallback("Masked Final", MouseCallBackFunc, NULL);
+
+	
+	//createTrackbar("Target FPS")
 
 
 #if FILESAVE_MODE_EN
@@ -529,23 +606,11 @@ int main(int argc, char *argv[])
 #endif
 		ContourBasedFilter(&Longest_Contour, &Silhouette_Final, &Longest_Contour_Length);
 #endif
+		
+		//cv::morphologyEx(Longest_Contour, Longest_Contour, MORPH_CLOSE, Morph_Element);
 		/*
-		cv::morphologyEx(Longest_Contour, Longest_Contour, MORPH_CLOSE, Morph_Element);
 		cv::morphologyEx(Longest_Contour, Longest_Contour, MORPH_DILATE, Morph_Element);
 		*/
-
-
-#if FILESAVE_MODE_EN
-
-			ostringstream Save1;
-			Save1 << SavePath1 << std::setfill('0') << std::setw(5) << frame_no << ".jpg";
-			imwrite(Save1.str(), Silhouette_Final);
-
-			ostringstream Save2;
-			Save2 << SavePath2 << std::setfill('0') << std::setw(5) << frame_no << ".jpg";
-			imwrite(Save2.str(), Longest_Contour);
-
-#endif
 
 
 		vector<Point> contour_point_array;
@@ -609,7 +674,7 @@ int main(int argc, char *argv[])
 		static string Data_Result = "NULL";
 		string Returned_name;
 
-		if (Longest_Contour_Length > MIN_DETECT_CONTOUR && Longest_Contour_Length < MAX_DETECT_CONTOUR && frame_no > 0) //실루엣이 존재하고, 컨투어 길이가 일정 이상일때
+		if (Longest_Contour_Length > MIN_DETECT_CONTOUR && Longest_Contour_Length < MAX_DETECT_CONTOUR && frame_no > 0 && !Recognition_Success && StartRecognition) //실루엣이 존재하고, 컨투어 길이가 일정 이상일때
 		{
 			if (Contour_condition > CONTOUR_CONDITION_THRESHOLD)
 			{
@@ -620,6 +685,7 @@ int main(int argc, char *argv[])
 				if (Returned_name.find("No Data") == string::npos)
 				{
 					Recognition_Success = true;
+					StartRecognition = false;
 					Data_Result = Returned_name;
 				}
 				else
@@ -634,8 +700,10 @@ int main(int argc, char *argv[])
 
 		else
 		{
-			Contour_condition = 0;
+			if (Contour_condition >0)
+				Contour_condition--;
 		}
+
 
 
 		if (Direction_Tally[0] > WALK_DIRECTION_THRESHOLD)
@@ -668,16 +736,20 @@ int main(int argc, char *argv[])
 		cv::putText(Mask_Output, DebugStream.str(), Point(30, 60), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(0, 0, 0), 2, LINE_AA, false);
 
 #endif
-
-
-
+		
 		//걷는 방향에 빠라서 표기할 String을 입력 후 이미지에 표시
+		/*
 		if (Walk_Direction == LEFT_WALK)
 			cv::putText(Mask_Output, "Left", Point(30, Rows - 30), FONT_HERSHEY_PLAIN, 1.5, Scalar(0, 255, 0), 1, LINE_AA, false);
 		else if (Walk_Direction == RIGHT_WALK)
 			cv::putText(Mask_Output, "Right", Point(30, Rows - 30), FONT_HERSHEY_PLAIN, 1.5, Scalar(255, 0, 0), 1, LINE_AA, false);
 		else
 			cv::putText(Mask_Output, "Stop", Point(30, Rows - 30), FONT_HERSHEY_PLAIN, 1.5, Scalar(0, 0, 255), 1, LINE_AA, false);
+		*/
+
+		//GUI 만들기
+
+
 
 		
 		//이미지에 추적되는 사람에 rectangle 표시
@@ -717,23 +789,6 @@ int main(int argc, char *argv[])
 		cv::putText(Mask_Output, "Recognized as:", Point(Cols - 170, Rows - 60), FONT_HERSHEY_COMPLEX_SMALL, 0.9, Scalar(255, 255, 0), 1, LINE_AA, false);
 		cv::putText(Mask_Output, Data_Result, Point(Cols - 170, Rows - 30), FONT_HERSHEY_COMPLEX_SMALL, 0.9, Scalar(255, 0, 255), 1, LINE_AA, false);
 
-#if DEMO_MODE
-
-		//설명 표기
-		cv::putText(Mask_Output, "Press ESC to quit", Point(Cols / 2 - 80, Rows - 30), FONT_HERSHEY_PLAIN, 1.2, Scalar(255, 255, 255, 0.5), 1, LINE_AA, false);
-
-#endif
-		//Demo End
-
-
-
-		
-
-
-		cv::imshow("Masked Final", Mask_Output);
-				
-		//창을 알맞는 위치로 이동
-		cv::moveWindow("Masked Final", 0, 0);
 
 #if DEBUG_MODE
 		cv::imshow("Input", Current_Frame);
@@ -741,11 +796,96 @@ int main(int argc, char *argv[])
 
 		//실루엣은 중앙에 위치하도록 가변 위치 적용
 
+		cv::imshow("Silhouette", Silhouette_Final);
+		cv::moveWindow("Silhouette", 0, 0 + Rows + 30);
+
 		cv::imshow("Filtered", Longest_Contour);
-		cv::moveWindow("Filtered", 0, 0 + Rows + 30);
+		cv::moveWindow("Filtered", 0 + Cols, 0 + Rows + 30);
 
 #endif
 		frame_no++;
+
+
+
+#if USE_GUI_BUTTON
+		//GUI Make
+
+		//Play Button
+		if (PlayCommand)
+		{
+			rectangle(Mask_Output, Point(30, Rows - 60), Point(90, Rows - 30), Scalar(200, 200, 200), -1, 8, 0);
+			rectangle(Mask_Output, Point(30, Rows - 60), Point(90, Rows - 30), Scalar(0, 255, 0), 2, 8, 0);
+			putText(Mask_Output, "Play", Point(40, Rows - 40), FONT_HERSHEY_PLAIN, 1.2, Scalar(0, 128, 0), 1, LINE_AA, false);
+		}
+
+		else
+		{
+			rectangle(Mask_Output, Point(30, Rows - 60), Point(90, Rows - 30), Scalar(200, 200, 200), -1, 8, 0);
+			rectangle(Mask_Output, Point(30, Rows - 60), Point(90, Rows - 30), Scalar(0, 0, 255), 2, 8, 0);
+			putText(Mask_Output, "Pause", Point(32, Rows - 40), FONT_HERSHEY_PLAIN, 1.2, Scalar(0, 0, 128), 1, LINE_AA, false);
+		}
+
+		//Reset
+		rectangle(Mask_Output, Point(100, Rows - 60), Point(100 + 60, Rows - 30), Scalar(200, 200, 200), -1, 8, 0);
+				
+		if (ResetCommand)
+		{
+			rectangle(Mask_Output, Point(100, Rows - 60), Point(100 + 60, Rows - 30), Scalar(120, 120, 120), -1, 8, 0);
+			//해당하는 함수 호출;
+
+			ResetCommand = false;
+		}
+
+		rectangle(Mask_Output, Point(100, Rows - 60), Point(100 + 60, Rows - 30), Scalar(255, 255, 0), 2, 8, 0);
+		putText(Mask_Output, "Reset", Point(100 + 2, Rows - 40), FONT_HERSHEY_PLAIN, 1.2, Scalar(128, 128, 0), 1, LINE_AA, false);
+
+		//Exit Button
+		rectangle(Mask_Output, Point(170, Rows - 60), Point(170 + 60, Rows - 30), Scalar(200, 200, 200), -1, 8, 0);
+		rectangle(Mask_Output, Point(170, Rows - 60), Point(170 + 60, Rows - 30), Scalar(0, 255, 255), 2, 8, 0);
+		putText(Mask_Output, "Exit", Point(170 + 10, Rows - 40), FONT_HERSHEY_PLAIN, 1.2, Scalar(0, 128, 128), 1, LINE_AA, false);
+
+		//Recognition Start Button
+		rectangle(Mask_Output, Point(240, Rows - 60), Point(240 + 120, Rows - 30), Scalar(200, 200, 200), -1, 8, 0);
+		rectangle(Mask_Output, Point(240, Rows - 60), Point(240 + 120, Rows - 30), Scalar(100, 100, 255), 2, 8, 0);
+		putText(Mask_Output, "Recognition", Point(240 + 2, Rows - 40), FONT_HERSHEY_PLAIN, 1.2, Scalar(50, 128, 128), 1, LINE_AA, false);
+
+		if (ExitCommand)
+			exit(EXIT_SUCCESS);
+
+#endif
+
+
+
+#if FILESAVE_MODE_EN
+
+		ostringstream Save1;
+		Save1 << SavePath1 << std::setfill('0') << std::setw(5) << frame_no << ".jpg";
+		imwrite(Save1.str(), Silhouette_Final);
+
+		ostringstream Save2;
+		Save2 << SavePath2 << std::setfill('0') << std::setw(5) << frame_no << ".jpg";
+		imwrite(Save2.str(), Longest_Contour);
+
+		ostringstream Save3;
+		Save3 << SavePath3 << std::setfill('0') << std::setw(5) << frame_no << ".jpg";
+		imwrite(Save3.str(), Mask_Output);
+
+
+#endif
+
+
+		cv::imshow("Masked Final", Mask_Output);
+
+		//창을 알맞는 위치로 이동
+		cv::moveWindow("Masked Final", 0, 0);
+
+		//Play 상태가 아니면 HOLD, EXIT 조건들은 모두 실행
+		while (!PlayCommand)
+			if (waitKey(1) == 27) //ESC키로 종료 
+				break;
+			else if (ExitCommand)
+				exit(EXIT_SUCCESS);
+
 
 		if (waitKey(1) == 27) //ESC키로 종료 
 			break;

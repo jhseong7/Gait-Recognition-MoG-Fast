@@ -35,14 +35,32 @@ Mat Make_contour(Mat* input_image, vector<Point>* input_vector)
 		if (length>100)
 		{
 			output_contours.push_back(contours[i]);
-			drawContours(drawing, contours, i, color, 1, 8, hierarchy, 2, Point());
+			//drawContours(drawing, contours, i, color, 1, 8, hierarchy, 2, Point());
 		}
 	}
 
-	(*input_vector) = output_contours[0];
+	int max_length = 0;
+	int max_index = 0;
 
+	for (i = 0; i<output_contours.size(); i++)
+	{
+		length = arcLength(output_contours[i], 1);
+		if (length > max_length)
+		{
+			max_index = i;
+		}
+
+	}
+
+	(*input_vector) = output_contours[max_index];
+
+	for (i = 0; i<output_contours.size(); i++)
+	{
+		drawContours(drawing, output_contours, i, color);
+	}
 	return drawing;
 }
+
 
 void ContourBasedParameterCalc(Mat* input_image, int* Longest_Contour_Length)
 {

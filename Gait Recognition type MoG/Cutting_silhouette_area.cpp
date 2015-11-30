@@ -4,6 +4,7 @@ Mat Cutting_silhouette_area(Mat* input_image,int* height,int* width)
 {
     //Variable
 	Mat image = *input_image;
+	threshold(image, image, 100, 255, CV_THRESH_BINARY);
 	uchar intensity;
     
     //Index
@@ -28,7 +29,7 @@ Mat Cutting_silhouette_area(Mat* input_image,int* height,int* width)
 		for(j=0;j<image.cols;j++)
 		{
 			intensity = image.at<uchar>(i,j);
-			if(intensity!=0)
+			if(intensity==255)
 			{
 				if(i<up){up=i;}
 				else if(i>down){down=i;}
@@ -40,7 +41,6 @@ Mat Cutting_silhouette_area(Mat* input_image,int* height,int* width)
 		}
 	}
 
-	
 
 	int sil_height = down-up;
 	int sil_width = right - left;
@@ -53,5 +53,6 @@ Mat Cutting_silhouette_area(Mat* input_image,int* height,int* width)
     //Ratio 계산을 위해 Height,Width를 반환한다. 
 	*height = sil_height;
     *width = sil_width;
+
 	return out_image;
 }

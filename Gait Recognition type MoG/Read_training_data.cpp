@@ -8,6 +8,8 @@
 #include "opencv_inc.h"
 #include <stdio.h>
 
+
+
 vector<Data_set> Read_training_data(string File_path)
 {
     char Training_file_Data_char[100];  string Training_file_Data_string;
@@ -91,7 +93,7 @@ vector<Data_set> Read_training_data(string File_path)
                 Sub_size = Sub_index - Index;
                 Identity_weight_string = Training_file_Data_string.substr(Index+Size,Sub_size-Size);
                 cout << Identity_weight_string << endl;
-                if(k==0){temp.Segment1_Weight=stof(Identity_weight_string.c_str());}
+                if(k==0){temp.Segment1_Weight=1;}
                 else if(k==1){temp.Segment2_Weight=stof(Identity_weight_string.c_str());}
                 else if(k==2){temp.Segment3_Weight=stof(Identity_weight_string.c_str());}
                 else if(k==3){temp.Segment4_Weight=stof(Identity_weight_string.c_str());}

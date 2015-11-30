@@ -101,6 +101,7 @@
     <ClCompile Include="Gait_period_cal.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Make_Feature_data.cpp" />
+    <ClCompile Include="Normalize.cpp" />
     <ClCompile Include="PMS.cpp" />
     <ClCompile Include="Read_training_data.cpp" />
     <ClCompile Include="Recognition.cpp" />

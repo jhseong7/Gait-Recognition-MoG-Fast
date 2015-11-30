@@ -3,14 +3,18 @@
 #include "Global Variables.h"
 #include <cstdio>
 
-void Before_PMS(Mat input_image,Mat* Image_array,Mat* Cutted_image_array,Mat* Contour_out_image_array,Mat* Resampled_image_array, int* number_of_image);
+void Before_PMS(Mat input_image, Mat* Image_array, Mat* Cutted_image_array, Mat* Contour_out_image_array, Mat* Resampled_image_array, Mat* Normalized_image_array, Mat* Centered_image_array, int* number_of_image);
 void Get_period(bool* Period_find, int * number_of_image);
 void Get_PMS(int period);
 
-Mat* Image_array = new Mat[100];
-Mat* Cutted_image_array = new Mat[100];
-Mat* Contour_out_image_array = new Mat[100];
-Mat* Resampled_image_array = new Mat[100];
+#define MATSIZE 1000
+
+Mat* Image_array = new Mat[MATSIZE];
+Mat* Cutted_image_array = new Mat[MATSIZE];
+Mat* Contour_out_image_array = new Mat[MATSIZE];
+Mat* Resampled_image_array = new Mat[MATSIZE];
+Mat* Normalized_image_array = new Mat[MATSIZE];
+Mat* Centered_image_array = new Mat[MATSIZE];
 
 vector<Point> contour_point_array;
 vector<Point> refer_point;
@@ -29,8 +33,8 @@ Configure Final_result(Mat input_image,int* period_final)
 	Configure result;
 	result.period_ok = false;
 
-	Before_PMS(input_image, Image_array, Cutted_image_array, Contour_out_image_array, Resampled_image_array, &number_of_image);
-	
+	Before_PMS(input_image, Image_array, Cutted_image_array, Contour_out_image_array, Resampled_image_array, Normalized_image_array, Centered_image_array, &number_of_image);
+
 	if (period_find == false)
 	{
 		Get_period(&period_find, &number_of_image);
@@ -75,19 +79,30 @@ bool Feature_make(Mat input_image)
 */
 
 
-void Before_PMS(Mat input_image,Mat* Image_array,Mat* Cutted_image_array,Mat* Contour_out_image_array,Mat* Resampled_image_array, int* number_of_image)
+void Before_PMS(Mat input_image, Mat* Image_array, Mat* Cutted_image_array, Mat* Contour_out_image_array, Mat* Resampled_image_array, Mat* Normalized_image_array, Mat* Centered_image_array, int* number_of_image)
 {
     int height=0;   int width=0;
 	int num_image = *number_of_image;
 
-    Image_array[num_image] = input_image;
-    Cutted_image_array[num_image] = Cutting_silhouette_area(&Image_array[num_image], &height, &width);
-    bounding_box_ratio.push_back((double)height/(double)width);
-    Contour_out_image_array[num_image] = Contour(&(Cutted_image_array[num_image]), &contour_point_array);
-   
-    refer_point = Find_refer_point(contour_point_array);
+	Image_array[num_image] = input_image;
+	Cutted_image_array[num_image] = Cutting_silhouette_area(&Image_array[num_image], &height, &width);
+	bounding_box_ratio.push_back((double)height / (double)width);
+	//imshow("temp_1", Cutted_image_array[num_image]);
+	//waitKey();
+	Normalized_image_array[num_image] = Normalize(Cutted_image_array[num_image]);
+	//imshow("temp", Normalized_image_array[num_image]);
+	//waitKey();
+	Centered_image_array[num_image] = Match_center(Normalized_image_array[num_image]);
+	Contour_out_image_array[num_image] = Contour(&(Centered_image_array[num_image]), &contour_point_array);
+	//imshow("temp_2", Contour_out_image_array[num_image]);
+	//waitKey();
+
+	refer_point = Find_refer_point(contour_point_array);
     Segment = Resampling(&contour_point_array,&refer_point);
     Resampled_image_array[num_image] = Draw_Resampling(Segment,Contour_out_image_array[num_image]);
+
+	//imshow("temp", Resampled_image_array[num_image]);
+	//waitKey();
     
     CSC_array.push_back(CSC(Segment));
 
@@ -106,18 +121,38 @@ void Get_period(bool* Period_find,int * number_of_image)
 		period = temp_period;
 		if (!(temp_period == -1))
 		{
-			if (temp == temp_period)
+			if (temp_period > 50)
 			{
-				*Period_find = true;
-				period = temp_period;
+				if (temp == temp_period)
+				{
+					*Period_find = true;
+					period = temp_period;
+				}
 			}
 		}
 		else if (temp_period == -1){ *Period_find = false; }
 	}
 }
 
-void Get_PMS(int period)
+void Get_PMS(int pms_period)
 {
-    PMS_result = PMS(CSC_array,period);
+    PMS_result = PMS(CSC_array);
+	//vector<Point> test;
+	//Point2f temp;
+	//Mat temp_mat = Mat::zeros(1000, 1000, CV_8UC3);
+	//int i;
+	//for (i = 0; i < 40; i++)
+	//{
+		//temp.x = PMS_result[i].real() + 500;
+		//temp.y = PMS_result[i].imag() + 500;
+
+		//temp_mat.at<Vec3b>(temp.x, temp.y)[0] = 255;
+		//temp_mat.at<Vec3b>(temp.x, temp.y)[1] = 255;
+		//temp_mat.at<Vec3b>(temp.x, temp.y)[2] = 255;
+
+		//imshow("PMS", temp_mat);
+		//waitKey(10);
+	//}
+
     PMS_result_Segment = Segmenting(PMS_result);
 }

@@ -78,6 +78,9 @@
     <ClCompile Include="Contour_extraction.cpp">
       <Filter>Source Files\Feature Extraction</Filter>
     </ClCompile>
+    <ClCompile Include="Normalize.cpp">
+      <Filter>Source Files\Feature Extraction</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">
