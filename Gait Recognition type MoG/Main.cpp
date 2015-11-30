@@ -14,8 +14,33 @@
 
 #include "Preprocess_PMS.h"
 
+
+//setw용
+#include <iomanip>
+
 //-----------------------------------------------------------------------------
 //Define
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+//프로그램 설정
+//
+//WEBCAM_MODE		: config 파일을 사용안하는 경우 설정하는 웹캠 모드 설정용
+//WEBCAM_NUMBER		: 사용할 웹캠 번호
+//
+//FRAMESKIP_ENABLE	: 프레임이 target framerate가 안나올 경우, 프레임 스킵을 킬지여부
+//
+//MORPH_STRUCT_SIZE_X	: Longest Contour에 사용하는 morphology element의 사이즈 결정
+//MORPH_STRUCT_SIZE_Y	:
+//
+//WALK_DIRECTION_THRESHOLD : 걷는 방향을 결정할때, 방향성 유지의 역치값
+//CONTOUR_CONDITION_THRESHOLD : 컨투어 조건 내에 컨투어 길이가 유지될 때, 얼마나 오래유지가 되면 유효한 데이터로 처리할 것인가를 결정할 값
+//
+//MIN_DETECT_CONTOUR : 컨투어 길이의 유효한 범위 (dead zone) 설정
+//MAX_DETECT_CONTOUR :
+//
+//READ_VIDEO_FOLDER : config 파일을 사용 안할때 읽을 파일의 경로 
+//READ_VIDEO_NAME :
 //-----------------------------------------------------------------------------
 
 #define WEBCAM_MODE false
@@ -23,40 +48,59 @@
 
 #define FRAMESKIP_ENABLE false
 
-#define FILESAVE_MODE_EN false
 
 #define MORPH_STRUCT_SIZE_X 1
 #define MORPH_STRUCT_SIZE_Y 2
 
+#define TARGET_FPS 30.0
+
+#define WALK_DIRECTION_THRESHOLD 5
+#define CONTOUR_CONDITION_THRESHOLD 1
+
+#define MIN_DETECT_CONTOUR 300
+#define MAX_DETECT_CONTOUR 2000
+
 #define READ_VIDEO_FOLDER "Input/"
 #define READ_VIDEO_NAME "Jgag.avi"
 
-#define TARGET_FPS 30.0
+
+//-----------------------------------------------------------------------------
+//컴파일러 설정
+//
+//OPENCL_SUPPORT: BGSubtraction의 OpenCL 사용여부
+//MASK_MODE		: 출력 실루엣을 입력 Mask로 사용하여, 잘라진 입력 이미지를 출력으로 사용
+//DEBUG_MODE	: 출력창에 Debug용 파라미터들을 표시
+//DEMO_MODE		: 출력 결과를 미리 설정한 값으로 표기(UI Demo용 옵션)
+//
+//INPUT_IS_SILHOUETTE : 입력 영상이 이미 실루엣인 경우, BGSubtraction을 생략
+//
+//USE_CONFIG_FILE: 설정을 config.txt에서 읽어들일지 여부를 결정
+//
+//-----------------------------------------------------------------------------
+
+#define OPENCL_SUPPORT 0
+#define MASK_MODE 0
+#define DEBUG_MODE 1
+#define DEMO_MODE 1
+
+#define INPUT_IS_SILHOUETTE 1
+
+#define USE_CONFIG_FILE 1
+
+#define FILESAVE_MODE_EN 0
+
+//-----------------------------------------------------------------------------
+// 프로그램 내부 사용 define
+//-----------------------------------------------------------------------------
+#define END_OK 0
+#define END_ERROR 1
 
 #define LEFT_WALK -1
 #define SAME_WALK 0
 #define RIGHT_WALK 1
 
-#define WALK_DIRECTION_THRESHOLD 5
-#define CONTOUR_CONDITION_THRESHOLD 5
-
-#define MIN_DETECT_CONTOUR 400
-#define MAX_DETECT_CONTOUR 2000
-
 #define toggle(a) !a
 
-//컴파일러 설정
-#define OPENCL_SUPPORT 0
-#define MASK_MODE 0
-#define WINDOWS_MODE 1
-#define DEBUG_MODE 1
-#define DEMO_MODE 1
-
-#define USE_CONFIG_FILE 1
-
-//에러코드
-#define END_OK 0
-#define END_ERROR 1
 
 
 //-----------------------------------------------------------------------------
@@ -66,7 +110,7 @@
 
 //OpenCV Global Variables
 char* videoFilename = READ_VIDEO_NAME;
-char* SaveFilename = "Result.avi";
+
 cv::VideoCapture capture;
 cv::VideoCapture camera;
 
@@ -77,17 +121,19 @@ cv::Mat ContourImages;
 
 cv::Mat Mask_Output;
 
-
-
+//OpenCL 사용시 사용하는 변수
 cv::UMat CL_Current_Frame;
 cv::UMat CL_Background_Frame;
 
-int Rows, Cols;
-int frame_no = 0;
 
-int Walk_Direction = 0;
-cv::Point Previous_Point;
+int Rows, Cols; //프레임 사이즈
+int frame_no = 0; //프레임 진행도
 
+int Walk_Direction = 0; //걸음 방향 
+int Direction_Tally[2] = { 0 }; //걸음 방향 기록용 표
+cv::Point Previous_Point; //추적 박스의 이전 좌표 저장용
+
+//프레임 레이트 계산용 Tick Counter 측정 
 LARGE_INTEGER Frequency;
 LARGE_INTEGER Start_counter;
 LARGE_INTEGER End_counter;
@@ -96,9 +142,8 @@ LARGE_INTEGER Lag1, Lag2, Lag3, Lag4, Lag5;
 
 double frame_difference = 0;
 
-int Direction_Tally[2] = { 0 };
 
-//설정 변수
+//config 파일 설정 변수
 string Train_data_path;
 string Video_File_Path;
 bool Webcam_mode = WEBCAM_MODE;
@@ -111,7 +156,8 @@ bool Recognition_Processing = false;
 bool Recognition_Success = false;
 int Contour_condition = 0;
 
-
+//StringStream
+string SavePath1, SavePath2, SavePath3, SavePath4;
 
 
 using namespace std;
@@ -310,6 +356,51 @@ void InitOpenCVModules() //OPENCV 데이터들의 초기화
 
 }
 
+void InitSaveDirectories()
+{
+	//----------------------------------------------------
+	//디버그용 데이터 저장을 위한 디렉토리를 만들어 놓는 작업
+	//data폴더를 생성하고 data 밑에 파일들을 저장한다.
+	//
+	//----------------------------------------------------
+	ostringstream StringBuffer1, StringBuffer2, StringBuffer3, StringBuffer4;
+
+	time_t now = time(0);
+
+	CreateDirectoryA("Silhouette Data", NULL);
+
+	int index = 0;
+	for (int i = 0; i < Video_File_Path.size(); i++)
+		if (Video_File_Path[i] == '/')
+			index = i;
+
+
+	if (WEBCAM_MODE)
+		StringBuffer1 << "Silhouette Data/" << "Webcam" << ctime(&now) << '/';
+	else
+		StringBuffer1 << "Silhouette Data/" << Video_File_Path.substr(index,Video_File_Path.size()) << '/';
+
+	CreateDirectoryA(StringBuffer1.str().c_str(), NULL);
+
+	string CommonData = StringBuffer1.str();
+
+	StringBuffer2 << CommonData;
+	StringBuffer3 << CommonData; //contour
+	StringBuffer4 << CommonData; // resampled
+
+	StringBuffer1 << "Original/";
+	CreateDirectoryA(StringBuffer1.str().c_str(), NULL);
+
+	StringBuffer2 << "Longest Contour/";
+	CreateDirectoryA(StringBuffer2.str().c_str(), NULL);
+
+
+	SavePath1 = StringBuffer1.str();
+	SavePath2 = StringBuffer2.str();
+	SavePath3 = StringBuffer3.str();
+	SavePath4 = StringBuffer4.str();
+
+}
 
 int main(int argc, char *argv[])
 {
@@ -329,6 +420,12 @@ int main(int argc, char *argv[])
 
 	//Variable Initialize
 	InitLocalVariables();
+
+
+#if FILESAVE_MODE_EN
+	InitSaveDirectories();
+		
+#endif
 
 	Mat Morph_Element = getStructuringElement(MORPH_RECT, Size(2 * MORPH_STRUCT_SIZE_X + 1, 2 * MORPH_STRUCT_SIZE_Y + 1), Point(MORPH_STRUCT_SIZE_X, MORPH_STRUCT_SIZE_Y));
 	
@@ -414,6 +511,15 @@ int main(int argc, char *argv[])
 
 		}
 
+		static int Longest_Contour_Length;
+		static Mat Longest_Contour;
+		
+#if INPUT_IS_SILHOUETTE //이미 입력이 실루엣인 경우 BGSubtraction도 생략. Contour Based parameter만 뽑는다
+		Mat SplitChannel[3];
+		split(Current_Frame, SplitChannel);
+		ContourBasedParameterCalc(&SplitChannel[0], &Longest_Contour_Length);
+		SplitChannel[0].copyTo(Longest_Contour);
+#else
 		
 #if OPENCL_SUPPORT
 		CL_Current_Frame = Current_Frame.getUMat(ACCESS_READ);
@@ -421,18 +527,26 @@ int main(int argc, char *argv[])
 #else
 		FastBGSubtract_NonCL();
 #endif
-	
-			
-
-		static Mat Longest_Contour;
-		static int Longest_Contour_Length;
-		
-		
 		ContourBasedFilter(&Longest_Contour, &Silhouette_Final, &Longest_Contour_Length);
+#endif
 		/*
 		cv::morphologyEx(Longest_Contour, Longest_Contour, MORPH_CLOSE, Morph_Element);
 		cv::morphologyEx(Longest_Contour, Longest_Contour, MORPH_DILATE, Morph_Element);
 		*/
+
+
+#if FILESAVE_MODE_EN
+
+			ostringstream Save1;
+			Save1 << SavePath1 << std::setfill('0') << std::setw(5) << frame_no << ".jpg";
+			imwrite(Save1.str(), Silhouette_Final);
+
+			ostringstream Save2;
+			Save2 << SavePath2 << std::setfill('0') << std::setw(5) << frame_no << ".jpg";
+			imwrite(Save2.str(), Longest_Contour);
+
+#endif
+
 
 		vector<Point> contour_point_array;
 
@@ -499,7 +613,7 @@ int main(int argc, char *argv[])
 		{
 			if (Contour_condition > CONTOUR_CONDITION_THRESHOLD)
 			{
-				Returned_name = Train_main(Silhouette_Final, &Training_data);
+				Returned_name = Train_main(Longest_Contour, &Training_data);
 
 				Recognition_Processing = true;
 

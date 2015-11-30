@@ -37,6 +37,7 @@ void FastBGSubtract_NonCL(void);
 //Contour
 Mat Make_contour(Mat* input_image, vector<Point>* input_vector);
 void ContourBasedFilter(Mat* output_image, Mat* input_image, int* Longest_Contour_Length);
+void ContourBasedParameterCalc(Mat* input_image, int* Longest_Contour_Length);
 
 //Masking
 void ImageMask(Mat* Output_Image, Mat* Input_Image, Mat* Mask_Image);

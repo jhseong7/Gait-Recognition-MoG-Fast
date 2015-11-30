@@ -1,5 +1,5 @@
 training_data_path=Train/
-input_video_path=Input/lqf-00_2.avi
+input_video_path=Input/DB/fyc-00_1.avi
 webcam_mode=false
 webcam_number=2
 loop_mode=true

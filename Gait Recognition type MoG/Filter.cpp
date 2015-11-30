@@ -44,7 +44,103 @@ Mat Make_contour(Mat* input_image, vector<Point>* input_vector)
 	return drawing;
 }
 
+void ContourBasedParameterCalc(Mat* input_image, int* Longest_Contour_Length)
+{
+	Mat Thresholded;
+	Mat ContourImage;
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	RNG rng(12345); Scalar color;
+	int length;
 
+	threshold(*input_image, Thresholded, 70, 255, CV_THRESH_BINARY);
+	findContours(Thresholded, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, Point(0, 0));
+
+	ContourImage = Mat::zeros(Thresholded.size(), CV_8UC1);
+	color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+
+	int Max_Length_Index = 0;
+	*Longest_Contour_Length = 0;
+
+	for (int i = 0; i < contours.size(); i++)
+	{
+		length = arcLength(contours[i], 1);
+
+		if ((*Longest_Contour_Length) < length && length > trackbarposition)
+		{
+			Max_Length_Index = i;
+			(*Longest_Contour_Length) = length;
+		}
+		
+	}
+
+	drawContours(ContourImage, contours, Max_Length_Index, color, 1, 8, hierarchy, 2, Point());
+
+
+	int row = input_image->rows;
+	int col = input_image->cols;
+
+	maxP.x = 0;		maxP.y = 0;
+	minP.x = col;	minP.y = row;
+
+	int step_y = ContourImage.step[0];
+	int step_x = ContourImage.step[1];
+	uchar contourpixel = 0;
+
+	for (int x = 0; x < col; x++)
+	{
+		for (int y = 0; y < row; y++)
+		{
+			contourpixel = ContourImage.data[y*step_y + x*step_x];
+			if (contourpixel != 0)
+			{
+				if (x > maxP.x)
+					maxP.x = x;
+				if (y > maxP.y)
+					maxP.y = y;
+
+				if (x < minP.x)
+					minP.x = x;
+				if (y < minP.y)
+					minP.y = y;
+
+			}
+		}
+	}
+
+	Point Current_Point = (minP + maxP) / 2;
+
+
+	if (Current_Point.x >Previous_Point.x)
+	{
+		Direction_Tally[1]++;
+		Direction_Tally[0] = 0;
+	}
+
+	else if (Current_Point.x < Previous_Point.x)
+	{
+		Direction_Tally[0]++;
+		Direction_Tally[1] = 0;
+	}
+
+	if (abs(Current_Point.x - Previous_Point.x) >DELTA_MAX)
+		maxSize.x = 0;
+
+	if (abs(Current_Point.y - Previous_Point.y) >DELTA_MAX)
+		maxSize.y = 0;
+
+	Previous_Point = Current_Point;
+
+	//박스의  최대 크기 기록
+	Point BoxSize = maxP - minP;
+
+	if (BoxSize.x > maxSize.x)
+		maxSize.x = BoxSize.x;
+
+	if (BoxSize.y > maxSize.y)
+		maxSize.y = BoxSize.y;
+
+}
 
 void ContourBasedFilter(Mat* output_image, Mat* input_image, int* Longest_Contour_Length)
 {
@@ -54,7 +150,7 @@ void ContourBasedFilter(Mat* output_image, Mat* input_image, int* Longest_Contou
 	RNG rng(12345); Scalar color;
 	int length;
 
-	threshold(*input_image, Thresholded, 100, 255, CV_THRESH_BINARY);
+	threshold(*input_image, Thresholded, 70, 255, CV_THRESH_BINARY);
 	findContours(Thresholded, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, Point(0, 0));
 	
 	*output_image = Mat::zeros(Thresholded.size(), CV_8UC1);
