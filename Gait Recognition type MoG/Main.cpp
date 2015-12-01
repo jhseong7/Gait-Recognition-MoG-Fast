@@ -80,7 +80,7 @@
 
 #define OPENCL_SUPPORT 0
 #define MASK_MODE 0
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 #define DEMO_MODE 1
 #define USE_GUI_BUTTON 1
 
@@ -159,7 +159,7 @@ int Contour_condition = 0;
 
 
 //Button Click Functions
-bool PlayCommand = true;
+bool PlayCommand = false;
 bool ResetCommand = false;
 bool ExitCommand = false;
 bool StartRecognition = false;
@@ -405,6 +405,9 @@ void InitSaveDirectories()
 
 	StringBuffer3 << "Result/";
 	CreateDirectoryA(StringBuffer3.str().c_str(), NULL);
+
+	StringBuffer4 << "Input Frame/";
+	CreateDirectoryA(StringBuffer4.str().c_str(), NULL);
 
 
 	SavePath1 = StringBuffer1.str();
@@ -831,7 +834,7 @@ int main(int argc, char *argv[])
 		if (ResetCommand)
 		{
 			rectangle(Mask_Output, Point(100, Rows - 60), Point(100 + 60, Rows - 30), Scalar(120, 120, 120), -1, 8, 0);
-			//해당하는 함수 호출;
+			//ResetRecognition();
 
 			ResetCommand = false;
 		}
@@ -846,7 +849,10 @@ int main(int argc, char *argv[])
 
 		//Recognition Start Button
 		rectangle(Mask_Output, Point(240, Rows - 60), Point(240 + 120, Rows - 30), Scalar(200, 200, 200), -1, 8, 0);
-		rectangle(Mask_Output, Point(240, Rows - 60), Point(240 + 120, Rows - 30), Scalar(100, 100, 255), 2, 8, 0);
+		if (!StartRecognition)
+			rectangle(Mask_Output, Point(240, Rows - 60), Point(240 + 120, Rows - 30), Scalar(100, 100, 255), 2, 8, 0);
+		else
+			rectangle(Mask_Output, Point(240, Rows - 60), Point(240 + 120, Rows - 30), Scalar(255, 100, 100), 2, 8, 0);
 		putText(Mask_Output, "Recognition", Point(240 + 2, Rows - 40), FONT_HERSHEY_PLAIN, 1.2, Scalar(50, 128, 128), 1, LINE_AA, false);
 
 		if (ExitCommand)

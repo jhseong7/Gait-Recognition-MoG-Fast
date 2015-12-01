@@ -5,6 +5,10 @@
 
 vector<Data_set> Training_data;
 
+
+
+
+
 string Train_main(Mat Input_image, vector<Data_set>* Training_data)
 {
     string Final_result_string = "No Data";

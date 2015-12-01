@@ -1,5 +1,5 @@
 training_data_path=Train/1/
-input_video_path=Input/Train_Data/Whitewall_Yongjoo_normal_2.avi
+input_video_path=Input/Train_Data/Whitewall_YongJoo_normal_2.avi
 webcam_mode=false
 webcam_number=0
-loop_mode=true
+loop_mode=false

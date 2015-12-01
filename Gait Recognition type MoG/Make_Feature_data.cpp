@@ -28,6 +28,26 @@ int number_of_image = 0;
 int period = -1;
 bool period_find = false;
 
+void ResetRecognition()
+{
+	if (Image_array != NULL)
+	{
+		delete Image_array;
+		delete Cutted_image_array;
+		delete Contour_out_image_array;
+		delete Resampled_image_array;
+		delete Normalized_image_array;
+		delete Centered_image_array;
+
+		contour_point_array.clear();
+		refer_point.clear();
+		CSC_array.clear();
+		PMS_result.clear();
+		PMS_result_Segment.clear();
+		bounding_box_ratio.clear();
+	}
+}
+
 Configure Final_result(Mat input_image,int* period_final)
 {
 	Configure result;

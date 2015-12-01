@@ -25,4 +25,7 @@ extern cv::Point maxP, minP;
 extern cv::Point maxSize;
 
 extern int period;
+
+//Recognition
+
 #endif

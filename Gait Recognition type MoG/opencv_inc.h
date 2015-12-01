@@ -40,6 +40,7 @@ float Gait_dissimilarity(vector<complex<float> > Gait_1, vector<complex<float> >
 string Recognition(vector<Data_set> Training_data, Configure Input_data);
 Configure Final_result(Mat input_image,int* period_final);
 
+void ResetRecognition();
 string Train_main(Mat Input_image, vector<Data_set>* Training_data);
 
 vector<Data_set> Read_training_data(string File_path);

@@ -41,13 +41,19 @@ string Recognition(vector<Data_set> Training_data, Configure Input_data)
             Weight_total = Training_data[i].Segment1_Weight+Training_data[i].Segment2_Weight+Training_data[i].Segment3_Weight+Training_data[i].Segment4_Weight;
             Dissimilarity = (Segment1_dis+Segment2_dis+Segment3_dis+Segment4_dis)/Weight_total;
 		}
+
+		cout << "Identity[" << i << "], " << Training_data[i].name << " dissimilarity: " << Dissimilarity << endl;
+
 		if (Min_dis > Dissimilarity)
 		{
 			Min_dis = Dissimilarity;
 			Identity = Training_data[i].name;
 		}
 		Dissimilarity = 0;
-    }
+	}
     
+	if (period <= 52)
+		return "Insuff. Period";
+
     return Identity;
 }
